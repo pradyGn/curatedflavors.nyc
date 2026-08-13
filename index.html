@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>NYC Eats: a hand-curated map of where to eat in New York</title>
+<meta name="description" content="1,000+ vetted NYC restaurants, 100+ Manhattan happy hours with live timing, 220 farmers markets and a year-round food calendar. Free on iPhone, no tracking.">
+
+<link rel="canonical" href="https://curatedflavors.nyc/">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://curatedflavors.nyc/">
+<meta property="og:site_name" content="NYC Eats">
+<meta property="og:title" content="NYC Eats: a hand-curated map of where to eat in New York">
+<meta property="og:description" content="1,000+ vetted restaurants, 100+ Manhattan happy hours with live timing, 220 farmers markets and a year-round food calendar. Free on iPhone, with no tracking.">
+<meta property="og:image" content="https://curatedflavors.nyc/assets/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The NYC Eats masthead beside an iPhone showing a map of Manhattan restaurants.">
+<meta property="og:locale" content="en_US">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="NYC Eats: a hand-curated map of where to eat in New York">
+<meta name="twitter:description" content="1,000+ vetted restaurants, 100+ Manhattan happy hours with live timing, 220 farmers markets. Free on iPhone, with no tracking.">
+<meta name="twitter:image" content="https://curatedflavors.nyc/assets/img/og.png">
+
+<!-- Safari on iOS renders this as a native install banner above the page. It is the
+     single highest-converting element on a marketing page whose traffic arrives from
+     Instagram on iPhones, and it costs one tag. -->
+<meta name="apple-itunes-app" content="app-id=6768158917">
+
+<meta name="theme-color" content="#f2efe4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16150f" media="(prefers-color-scheme: dark)">
+
+<!-- Ratings and size verified against the live App Store listing on 2026-08-13 via
+     the iTunes lookup API, not copied from docs: v1.1.2, 10.0 MB, iOS 17.0+, free,
+     5.0 from 3 ratings. These go stale silently, so they are on the S07.T04 ops
+     watchlist. applicationCategory is LifestyleApplication: the App Store genre is
+     Food & Drink, which schema.org has no equivalent for, and Lifestyle is the
+     closest of its enumerated values. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://curatedflavors.nyc/#website",
+      "url": "https://curatedflavors.nyc/",
+      "name": "NYC Eats",
+      "description": "A hand-curated map of what is actually worth eating in New York.",
+      "inLanguage": "en-US"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://curatedflavors.nyc/#app",
+      "name": "NYC Eats",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "iOS 17.0 or later",
+      "softwareVersion": "1.1.2",
+      "fileSize": "10.0 MB",
+      "url": "https://curatedflavors.nyc/",
+      "downloadUrl": "https://apps.apple.com/us/app/nyc-eats/id6768158917",
+      "installUrl": "https://apps.apple.com/us/app/nyc-eats/id6768158917",
+      "screenshot": "https://curatedflavors.nyc/assets/img/hero-restaurants@2x.png",
+      "author": { "@type": "Person", "name": "Pradyuman Gangan" },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5",
+        "ratingCount": "3",
+        "bestRating": "5",
+        "worstRating": "1"
+      }
+    }
+  ]
+}
+</script>
+
+<!-- Favicons derived from the shipped app icon. The 16 and 32px versions are a
+     bowl-only crop: the "NYC Eats" wordmark in the full icon is illegible below
+     about 48px and only muddies the mark. -->
+<link rel="icon" href="assets/img/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="assets/img/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<!-- Preload the two faces that paint above the fold first: the Bodoni masthead and
+     the Space Mono labels around it. Not all five, because preloading everything
+     would compete with the hero screenshot for bandwidth and hurt LCP.
+
+     crossorigin is required even though these are same-origin. Font fetches are
+     always CORS-anonymous, so a preload without it lands in a different cache
+     partition than the @font-face request and the file is simply downloaded twice.
+     That is the usual way this optimization ships broken. -->
+<link rel="preload" href="assets/fonts/bodoni-moda/BodoniModa-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/space-mono/SpaceMono-Bold.woff2" as="font" type="font/woff2" crossorigin>
+
+<link rel="stylesheet" href="assets/css/fonts.css">
+<link rel="stylesheet" href="assets/css/site.css">
+
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header>
+  <div class="topbar section wrap">
+    <span class="topbar__item">Vol. 1 &middot; No. 1</span>
+    <span class="topbar__item topbar__item--wide">Five Boroughs &middot; Published from Brooklyn</span>
+    <span class="topbar__item topbar__item--accent">Free on the App&nbsp;Store</span>
+  </div>
+
+  <div class="masthead section wrap">
+    <p class="masthead__kicker kicker kicker--light">Restaurants &middot; Happy Hours &middot; Markets &middot; Events</p>
+    <h1 id="masthead-title">NYC EATS</h1>
+    <p class="masthead__tagline kicker kicker--light">A hand-curated map of what is actually worth eating</p>
+  </div>
+
+  <nav class="ribbon wrap" aria-label="Sections">
+    <ul class="ribbon__list" role="list">
+      <li><a href="#happy-hours">Happy Hours</a></li>
+      <li><a href="#restaurants">Restaurants</a></li>
+      <li><a href="#markets">Markets</a></li>
+      <li><a href="#events">Events</a></li>
+      <li><a href="#privacy">Privacy</a></li>
+      <li><a href="#about">About</a></li>
+      <li class="ribbon__soon">Blog <span class="badge-soon">Soon</span></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="main" tabindex="-1">
+
+  <section class="hero wrap" aria-labelledby="hero-title">
+    <div class="hero__letter" data-reveal>
+      <p class="hero__kicker kicker">From the Editor</p>
+      <h2 id="hero-title">I got tired of asking my friends where to eat.</h2>
+      <div class="hero__divider" aria-hidden="true"></div>
+
+      <div class="letter">
+        <p><span class="letter__cap">S</span>o I spent a year building the list myself. Every restaurant read about, cross-checked, and written up by hand, then the happy hours, then the markets, then the events, until it turned into an app.</p>
+        <p>It is 1,000+ vetted restaurants, 100+ Manhattan happy hours with live hour-by-hour timing, 220 farmers markets, and a year-round calendar of food events across all five boroughs.</p>
+        <p>No accounts. No ads. No tracking. The data ships inside the app, so it works on the subway. It is free, and it will stay free.</p>
+      </div>
+
+      <div class="hero__cta">
+        <a class="btn" href="https://apps.apple.com/us/app/nyc-eats/id6768158917" target="_blank" rel="noopener">
+          Download on iPhone <span class="btn__arrow" aria-hidden="true">&#8594;</span>
+        </a>
+        <p class="hero__meta meta">
+          Free &middot; iOS 17+<br>
+          10.0 MB &middot; 5.0<!--
+          -->&nbsp;<svg class="star" viewBox="0 0 20 19" width="11" height="10.5" role="img" aria-label="star" focusable="false"><path fill="currentColor" d="M10 0l2.45 6.9H20l-6.1 4.35 2.3 7.05L10 14.2l-6.2 4.1 2.3-7.05L0 6.9h7.55z"/></svg>
+          on the App Store
+        </p>
+      </div>
+
+      <p class="hero__byline">By Pradyuman Gangan. One person, non-commercial, and yes, I read every correction email.</p>
+    </div>
+
+    <!-- EP01.S04.T03 replaces the empty screen slot with a real screenshot. -->
+    <div class="hero__phone pinstripe--wash" data-reveal>
+      <div class="phone phone--hero">
+        <div class="phone__screen">
+          <div class="phone__slot">
+            <picture>
+            <source srcset="assets/img/hero-restaurants@2x.webp" type="image/webp">
+            <img src="assets/img/hero-restaurants@2x.png" width="600" height="1300"
+                 alt="The NYC Eats app showing a map of Manhattan dotted with restaurant pins, above a card for Salma, a Middle Eastern place, with its Tasty score and a line from a review." fetchpriority="high">
+          </picture>
+          </div>
+          <span class="phone__island" aria-hidden="true"></span>
+          <span class="phone__indicator" aria-hidden="true"></span>
+        </div>
+        <span class="phone__btn phone__btn--silence" aria-hidden="true"></span>
+        <span class="phone__btn phone__btn--vol-up" aria-hidden="true"></span>
+        <span class="phone__btn phone__btn--vol-dn" aria-hidden="true"></span>
+        <span class="phone__btn phone__btn--power" aria-hidden="true"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="stats-band wrap" aria-label="By the numbers">
+    <ul class="stats" role="list">
+      <li class="stat"><span class="stat__figure display">1,000+</span><span class="stat__label">Restaurants</span></li>
+      <li class="stat"><span class="stat__figure display">100+</span><span class="stat__label">Happy Hours</span></li>
+      <li class="stat"><span class="stat__figure display">220</span><span class="stat__label">Farmers Markets</span></li>
+      <li class="stat"><span class="stat__figure display">151</span><span class="stat__label">Accept EBT</span></li>
+      <li class="stat"><span class="stat__figure stat__figure--accent display">0</span><span class="stat__label">Trackers</span></li>
+    </ul>
+  </section>
+
+  <section id="happy-hours" class="section wrap band-row duo" aria-labelledby="happy-hours-title" data-reveal>
+    <div>
+      <p class="section-kicker">
+        <span class="section-kicker__num">01</span>
+        <span class="section-kicker__label">Happy Hours</span>
+      </p>
+      <h3 id="happy-hours-title">The feed knows what time it is.</h3>
+      <p class="prose">Most happy hour lists are a PDF someone forgot to update in 2019. This one sorts itself by the clock: <strong>LIVE NOW</strong> rises to the top, then <strong>STARTS SOON</strong>, then <strong>LATER TODAY</strong>. Every spot carries a countdown, and the ones already pouring get a progress bar.</p>
+      <p class="prose">Scout any day of the week with the Deals by Day switcher, pan the map to filter to your block, then open a venue for its full food and drinks list with prices.</p>
+      <p class="chips">
+        <span class="chip">Live countdowns</span>
+        <span class="chip">Deals by day</span>
+        <span class="chip">Food + drink prices</span>
+        <span class="chip">Manhattan</span>
+      </p>
+    </div>
+
+    <!-- HYDRATION CONTRACT for EP01.S03.T03. Everything below is a working no-JS
+         fallback; the live engine replaces the values in place.
+           data-hh-count      the "N pouring" figure in the card header
+           data-hh-status     the header's left label ("Live this minute")
+           data-hh-featured   the featured venue block (name, meta, bar, countdown)
+           data-hh-name       featured venue name
+           data-hh-meta       featured venue "area, type, deal" line
+           data-hh-bar        the progress fill whose width is elapsed/duration
+           data-hh-countdown  the ticking "ends in ..." line
+           data-hh-list       container for the secondary rows
+           data-hh-caption    the card's footer caption
+         Note for S03: happy-hour price_level is null for all 107 venues in the
+         bundled data, so the hydrated meta line uses the venue `type` field where
+         this baked sample shows "$$". -->
+    <div class="card hh" role="group" aria-label="Live happy hours in Manhattan, updated as you watch">
+      <div class="card__head hh__head">
+        <span data-hh-status>Live this minute</span>
+        <span class="hh__count" data-hh-count>14 pouring</span>
+      </div>
+
+      <div class="hh__featured" data-hh-featured>
+        <div class="hh__top">
+          <span class="hh__name display" data-hh-name>The Wren</span>
+          <span class="hh__badge">Live now</span>
+        </div>
+        <p class="hh__meta" data-hh-meta>Bowery &middot; $$ &middot; $8 drafts, $2 oysters</p>
+        <div class="bar" role="presentation" aria-hidden="true"><div class="bar__fill" data-hh-bar style="width:64%"></div></div>
+        <p class="hh__countdown" data-hh-countdown aria-live="off">Ends in 1h 13m</p>
+      </div>
+
+      <div data-hh-list>
+        <div class="hh__row">
+          <div>
+            <span class="hh__row-name display">Casa Mono</span>
+            <span class="hh__row-meta">Gramercy &middot; $$$</span>
+          </div>
+          <div class="hh__when">Starts soon<br><span class="hh__when-sub">in 24m</span></div>
+        </div>
+        <div class="hh__row">
+          <div>
+            <span class="hh__row-name display">Dear Irving</span>
+            <span class="hh__row-meta">Gramercy &middot; $$$</span>
+          </div>
+          <div class="hh__when hh__when--later">Later today<br><span class="hh__when-sub">5:00 PM</span></div>
+        </div>
+      </div>
+
+      <template id="hh-row-template">
+        <div class="hh__row">
+          <div>
+            <span class="hh__row-name display"></span>
+            <span class="hh__row-meta"></span>
+          </div>
+          <div class="hh__when"><span class="hh__when-label"></span><br><span class="hh__when-sub"></span></div>
+        </div>
+      </template>
+
+      <p class="card__foot hh__caption" data-hh-caption>Sample of the in-app feed &middot; countdown is live</p>
+    </div>
+  </section>
+
+  <section id="restaurants" class="section wrap band-row" aria-labelledby="restaurants-title" data-reveal>
+    <p class="section-kicker">
+      <span class="section-kicker__num">02</span>
+      <span class="section-kicker__label">Restaurants</span>
+    </p>
+
+    <div class="duo duo--restaurants">
+      <div>
+        <h3 id="restaurants-title">Every spot was read about before it was listed.</h3>
+        <p class="prose">Each restaurant gets an <em>Editor&rsquo;s Note</em> that captures the room, a <em>Tasty Index</em> that ranks quality against popularity, and a menu of must-try dishes, each dish paired with a count of how many sources recommended it.</p>
+        <p class="prose">Pan the map to filter to what is around you, or flip from CARDS to INDEX for a ranked ledger of everything in view. Nineteen cuisine categories, 100+ specific cuisines, price from $ to $$$$, and a one-tap Open Now filter judged in New York time wherever you are.</p>
+        <div class="rule-grid caps">
+        <div class="cap">
+          <span class="cap__title">Editor&rsquo;s Note</span>
+          <span class="cap__desc">What the room is actually like</span>
+        </div>
+        <div class="cap">
+          <span class="cap__title">Tasty Index</span>
+          <span class="cap__desc">Quality ranked against hype</span>
+        </div>
+        <div class="cap">
+          <span class="cap__title">Walk-in odds</span>
+          <span class="cap__desc">Plus heads-up caveats</span>
+        </div>
+        <div class="cap">
+          <span class="cap__title">One-tap</span>
+          <span class="cap__desc">Call, directions, website</span>
+        </div>
+        </div>
+      </div>
+
+      <!-- HYDRATION CONTRACT for EP01.S03.T02. The six rows below are a working
+           no-JS fallback baked from the design's sample; the hydrator clones
+           #ledger-row-template and replaces them with the exported top six.
+             data-ledger          the rows container
+             data-ledger-caption  the footer caption
+           Rows are built by cloning the template and assigning textContent only,
+           never innerHTML, so exported data cannot inject markup. -->
+      <div class="card ledger">
+        <div class="card__head ledger__head">
+          <span>Index view</span>
+          <span class="ledger__by">Ranked by Tasty Index</span>
+        </div>
+
+        <ul class="ledger__rows" role="list" data-ledger>
+        <li class="ledger__row">
+          <span class="ledger__rank">01</span>
+          <span class="ledger__who">
+            <span class="ledger__name display">Bonnie&rsquo;s</span>
+            <span class="ledger__meta">Williamsburg &middot; Cantonese-American &middot; $$</span>
+          </span>
+          <span class="ledger__score display">96</span>
+        </li>
+        <li class="ledger__row">
+          <span class="ledger__rank">02</span>
+          <span class="ledger__who">
+            <span class="ledger__name display">Ha&rsquo;s Snack Bar</span>
+            <span class="ledger__meta">Two Bridges &middot; Vietnamese &middot; $$</span>
+          </span>
+          <span class="ledger__score display">94</span>
+        </li>
+        <li class="ledger__row">
+          <span class="ledger__rank">03</span>
+          <span class="ledger__who">
+            <span class="ledger__name display">Superiority Burger</span>
+            <span class="ledger__meta">East Village &middot; Vegetarian &middot; $</span>
+          </span>
+          <span class="ledger__score display">93</span>
+        </li>
+        <li class="ledger__row">
+          <span class="ledger__rank">04</span>
+          <span class="ledger__who">
+            <span class="ledger__name display">Tatiana</span>
+            <span class="ledger__meta">Lincoln Square &middot; Afro-Caribbean &middot; $$$$</span>
+          </span>
+          <span class="ledger__score display">92</span>
+        </li>
+        <li class="ledger__row">
+          <span class="ledger__rank">05</span>
+          <span class="ledger__who">
+            <span class="ledger__name display">Sofreh</span>
+            <span class="ledger__meta">Prospect Heights &middot; Persian &middot; $$$</span>
+          </span>
+          <span class="ledger__score display">90</span>
+        </li>
+        <li class="ledger__row">
+          <span class="ledger__rank">06</span>
+          <span class="ledger__who">
+            <span class="ledger__name display">Taqueria Ramirez</span>
+            <span class="ledger__meta">Greenpoint &middot; Mexican &middot; $</span>
+          </span>
+          <span class="ledger__score display">89</span>
+        </li>
+        </ul>
+
+        <template id="ledger-row-template">
+          <li class="ledger__row">
+            <span class="ledger__rank"></span>
+            <span class="ledger__who">
+              <span class="ledger__name display"></span>
+              <span class="ledger__meta"></span>
+            </span>
+            <span class="ledger__score display"></span>
+          </li>
+        </template>
+
+        <p class="ledger__caption" data-ledger-caption>Illustrative ledger &middot; the app ships 1,000+</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EP01.S02.T08 builds this two-up wrapper and its left half; EP01.S02.T09 fills
+       the right half. The nav links to each half separately, so the ids sit on the
+       cells, not the wrapper. Note the desktop consequence: at 900px and up the two
+       cells are side by side and share a top offset, so both nav items scroll to the
+       same place. Below 900px they stack and land separately, which is where it
+       matters, and mobile is the primary traffic source. -->
+  <div class="twoup section wrap">
+    <section id="markets" class="twoup__cell twoup__cell--left" aria-labelledby="markets-title" data-reveal>
+      <p class="section-kicker">
+        <span class="section-kicker__num">03</span>
+        <span class="section-kicker__label">Farmers Markets</span>
+      </p>
+      <h3 id="markets-title" class="band-h3">220 markets, and the schedule that matters.</h3>
+      <p class="prose prose--tight">GrowNYC, Down to Earth, and the independents, mapped with the day-of-week filter that decides whether a trip is worth it. 151 of them work with SNAP/EBT, and every listing says so along with its hours and season.</p>
+      <p class="chips">
+        <span class="chip chip--accent">EBT &middot; 151</span>
+        <span class="chip">Filter by day</span>
+        <span class="chip">Hours + season</span>
+        <span class="chip">All five boroughs</span>
+      </p>
+
+      <!-- EP01.S04.T03 replaces each screen slot with a real capture. -->
+      <div class="minis">
+        <div class="phone phone--mini">
+          <div class="phone__screen">
+            <div class="phone__slot">
+              <picture>
+                <source srcset="assets/img/mini-markets@2x.webp" type="image/webp">
+                <img src="assets/img/mini-markets@2x.png" width="240" height="520"
+                     alt="The farmers markets screen: an East Village map with market pins and a card for Tompkins Square Greenmarket, marked year-round." loading="lazy" decoding="async">
+              </picture>
+            </div>
+            <span class="phone__island" aria-hidden="true"></span>
+            <span class="phone__indicator" aria-hidden="true"></span>
+          </div>
+          <span class="phone__btn phone__btn--silence" aria-hidden="true"></span>
+          <span class="phone__btn phone__btn--power" aria-hidden="true"></span>
+        </div>
+        <div class="phone phone--mini">
+          <div class="phone__screen">
+            <div class="phone__slot">
+              <picture>
+                <source srcset="assets/img/mini-ebt@2x.webp" type="image/webp">
+                <img src="assets/img/mini-ebt@2x.png" width="240" height="520"
+                     alt="A market's detail sheet showing its day, opening hours, a year-round mark and an EBT accepted badge." loading="lazy" decoding="async">
+              </picture>
+            </div>
+            <span class="phone__island" aria-hidden="true"></span>
+            <span class="phone__indicator" aria-hidden="true"></span>
+          </div>
+          <span class="phone__btn phone__btn--silence" aria-hidden="true"></span>
+          <span class="phone__btn phone__btn--power" aria-hidden="true"></span>
+        </div>
+      </div>
+    </section>
+    <section id="events" class="twoup__cell twoup__cell--right" aria-labelledby="events-title" data-reveal>
+      <p class="section-kicker">
+        <span class="section-kicker__num">04</span>
+        <span class="section-kicker__label">Food Events</span>
+      </p>
+      <h3 id="events-title" class="band-h3">A year of festivals, pop-ups and chef collabs.</h3>
+      <p class="prose prose--tight">Grouped by month so you can scan ahead, with links out to the source page for tickets or RSVP. The calendar in the app refreshes on its own, and still works offline.</p>
+
+      <!-- HYDRATION CONTRACT for EP01.S03.T02: data-events on the list container,
+           rows cloned from #event-row-template with textContent only. The four rows
+           below are the design's sample, working as a no-JS fallback. -->
+      <ul class="events" role="list" data-events>
+        <li class="ev">
+          <span class="ev__month">AUG</span>
+          <span class="ev__name display">Hester Street Fair</span>
+          <span class="ev__where">LES</span>
+        </li>
+        <li class="ev">
+          <span class="ev__month">SEP</span>
+          <span class="ev__name display">Feast of San Gennaro</span>
+          <span class="ev__where">Little Italy</span>
+        </li>
+        <li class="ev">
+          <span class="ev__month">OCT</span>
+          <span class="ev__name display">Queens Night Market</span>
+          <span class="ev__where">Corona</span>
+        </li>
+        <li class="ev">
+          <span class="ev__month">NOV</span>
+          <span class="ev__name display">Chef Collab Series</span>
+          <span class="ev__where">Brooklyn</span>
+        </li>
+      </ul>
+
+      <template id="event-row-template">
+        <li class="ev">
+          <span class="ev__month"></span>
+          <span class="ev__name display"></span>
+          <span class="ev__where"></span>
+        </li>
+      </template>
+    </section>
+  </div>
+
+  <!-- The band stays inside the measure rather than bleeding full width: in the
+       export it spans the 1280px card exactly, and every hairline on the page stops
+       at the measure. band--ink re-points the ink tokens to their cream
+       counterparts, so every primitive inside works unchanged. -->
+  <section id="privacy" class="band--ink section wrap band-row band-row--tall duo duo--privacy" aria-labelledby="privacy-title" data-reveal>
+    <div>
+      <p class="section-kicker">
+        <span class="section-kicker__num">05</span>
+        <span class="section-kicker__label">Privacy</span>
+      </p>
+      <h3 id="privacy-title" class="privacy-h3">The app has no idea who you are. On purpose.</h3>
+      <p class="prose prose--privacy">There is no account to make and nothing to log in to. Every restaurant, happy hour, market and event is bundled inside the app, so it works with no signal at all. The only network calls fetch fresh event and trending listings, and they send nothing about you. Location, if you grant it, is used only on your iPhone to center the map.</p>
+    </div>
+
+    <div class="rule-grid nos">
+        <div class="no">
+          <span class="no__word display">No</span>
+          <span class="no__label">Accounts</span>
+        </div>
+        <div class="no">
+          <span class="no__word display">No</span>
+          <span class="no__label">Ads</span>
+        </div>
+        <div class="no">
+          <span class="no__word display">No</span>
+          <span class="no__label">Tracking</span>
+        </div>
+        <div class="no">
+          <span class="no__word display">No</span>
+          <span class="no__label">Analytics SDKs</span>
+        </div>
+    </div>
+  </section>
+
+  <section id="about" class="section wrap band-row duo duo--about" aria-labelledby="about-title" data-reveal>
+    <div>
+      <p class="kicker about__kicker">About &middot; Contact</p>
+      <h3 id="about-title" class="band-h3">Made by one person, in Brooklyn.</h3>
+      <p class="prose prose--tight about__copy">NYC Eats is a non-commercial project by Pradyuman Gangan. There is no team, no investors, and no plan to sell your data because there is no data to sell. If a place closed, moved, or is missing, tell me and I will fix it in the next update.</p>
+      <a class="btn btn--outline" href="mailto:gangan.pradyuman@gmail.com">gangan.pradyuman@gmail.com</a>
+    </div>
+
+    <!-- The blog is an epic non-goal, so this card links nowhere by design. -->
+    <div class="card teaser">
+      <p class="teaser__head">
+        <span class="kicker teaser__kicker">Coming next</span>
+        <span class="badge-soon">Soon</span>
+      </p>
+      <h4 id="blog-teaser-title" class="teaser__title">A blog, and somewhere to argue about it.</h4>
+      <p class="teaser__copy">Daily and weekly hot topics in NYC food (what opened, what closed, what is worth the line), written here and read inside the app, with a discussion thread on each one.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-foot section wrap">
+  <span>&copy; 2026 Pradyuman Gangan</span>
+  <nav class="site-foot__links" aria-label="Elsewhere">
+    <a href="https://apps.apple.com/us/app/nyc-eats/id6768158917" target="_blank" rel="noopener">App Store</a>
+    <a href="https://pradygn.github.io/nyceats-privacy/" target="_blank" rel="noopener">Privacy Policy</a>
+    <a href="mailto:gangan.pradyuman@gmail.com">Email</a>
+    <a href="https://www.instagram.com/curatedflavorsofnyc/" target="_blank" rel="noopener">Instagram</a>
+  </nav>
+  <span>Set in Bodoni &amp; Newsreader</span>
+</footer>
+
+<script src="assets/js/site.js" defer></script>
+
+</body>
+</html>

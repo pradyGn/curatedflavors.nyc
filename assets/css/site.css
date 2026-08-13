@@ -1,0 +1,1481 @@
+/* site.css - design tokens, base styles, and shared primitives for curatedflavors.nyc
+ *
+ * The foundation every section of the Broadsheet page builds on. Thirteen section
+ * tasks (EP01.S02) style their regions using only what is defined here, which is
+ * what keeps independently-built sections looking like one newspaper.
+ *
+ * Built by EP01.S01.T03, then revised against an independent review. Measured token
+ * inventory, primitive metrics, and the reasoning behind each consolidation:
+ *   plans/EP01-curated-flavors-website/S01T03-design-tokens-and-base-stylesheet.md
+ *
+ * Every value here was measured from the 1a Broadsheet slice of the design export
+ * (design/website/NYCEats_website-design/NYC Eats Site.dc.html, lines 36-256), not
+ * chosen. The design uses 21 distinct ink alphas for what are really six jobs, so
+ * they are consolidated: 21 magic numbers spread across thirteen task files is how a
+ * design drifts.
+ *
+ * TOKEN MAP
+ *   Surfaces   --page cream, --paper card, --pin-a/b pinstripe, --island near-black
+ *   Ink        --ink solid, then --ink-body / --ink-muted / --ink-faint by job
+ *   Rules      --rule-soft / --rule / --rule-strong / --rule-ink, --rule-double
+ *   Accent     --accent (authored red), --accent-deep (pressed state, see note)
+ *   Type       --font-display / --font-body / --font-mono, --fs-* sizes
+ *   Space      --gutter (44px desktop, fluid), --pad-section, --page-max, --anchor-offset
+ *
+ * CASCADE. Thirteen tasks append section styles to this one file, so the order is
+ * declared rather than left to whoever edits last. Section styles go in the final
+ * layer, or unlayered (which also wins). Never edit a primitive to fix one section.
+ *
+ * Load order matters: fonts.css must come first so @font-face is registered before
+ * anything asks for a family.
+ *
+ * Author: pgangan
+ */
+
+@layer reset, tokens, base, layout, primitives, sections;
+
+/* ---------------------------------------------------------------- reset ---- */
+
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body,
+  h1, h2, h3, h4, p, ul, ol, figure, blockquote, dl, dd {
+    margin: 0;
+  }
+
+  /* Removing markers also removes list semantics in Safari with VoiceOver, and
+   * three regions depend on being announced as lists (the stats band's "list, five
+   * items", the nav ribbon, the ledger and events rows). Those elements must carry
+   * an explicit role="list". */
+  ul[class], ol[class] { list-style: none; padding: 0; }
+
+  img, picture, video { display: block; max-width: 100%; }
+
+  /* svg is deliberately NOT display:block. EP01.S02.T03 sets the hero's rating star
+   * as an inline SVG (no shipped font contains U+2605), and a block-level svg would
+   * break that mono meta line onto three lines. */
+  svg { max-width: 100%; }
+
+  button, input, select, textarea { font: inherit; color: inherit; }
+
+  /* The design sets text-wrap:pretty on its body copy and on every display heading
+   * (export lines 67, 118, 146, 173), which is what keeps the masthead and hero rag
+   * from producing orphans. */
+  p, h1, h2, h3, h4 { text-wrap: pretty; }
+}
+
+/* --------------------------------------------------------------- tokens ---- */
+
+@layer tokens {
+  :root {
+    /* Surfaces */
+    --page:      #f2efe4;  /* page cream, 13 uses */
+    --paper:     #fbf9f2;  /* card paper, sits just above the page */
+    --pin-a:     #e9e5d7;  /* pinstripe / inset fills */
+    --pin-b:     #ded9c7;
+
+    /* Near-black, used for the phone's dynamic island and nothing else (3 uses,
+     * export lines 95, 185, 194). The privacy band is NOT this colour: it is
+     * --ink (#16150f) with cream text, so EP01.S02.T10 should reach for
+     * .band--ink below rather than for a black token. */
+    --island:    #0b0a06;
+
+    /* Ink. One solid, three text alphas by job.
+     *
+     * These are darker than the design in the faint range, on purpose and with
+     * numbers behind it. The export uses .45, .5 and .55 for small Space Mono
+     * microcopy, which measure 2.89:1, 3.34:1 and 3.90:1 on --page: all below the
+     * 4.5:1 WCAG AA floor that applies to exactly that kind of small text. The
+     * epic requires AA (S05.T04) and Lighthouse accessibility >= 95, so shipping
+     * the authored alphas would mean failing that gate and re-darkening anyway.
+     *
+     * .62 rather than .60 because the floor has to hold on all four declared
+     * surfaces, not just the two obvious ones. The pinstripe fills carry faint
+     * placeholder microcopy in the phone frames, and .60 measures only 4.43 on
+     * --pin-a and 4.25 on --pin-b. At .62: 4.85 on page, 5.00 on paper, 4.71 on
+     * pin-a, 4.52 on pin-b. Visually indistinguishable from .60.
+     *
+     * Any section wanting a lighter ink must use --ink-faint, not a one-off rgba:
+     * fixing contrast through one token is why these exist. */
+    --ink:       #16150f;                 /* 15.89:1 on --page              */
+    /* Same colour as --ink, but never repointed by .band--ink. The band needs to
+     * paint an ink background on the very element where it redefines --ink, and
+     * `background: var(--ink)` there would resolve against the element's own new
+     * value (cream) and render invisible text. Use this for the band surface. */
+    --ink-solid: #16150f;
+    --ink-body:  rgba(22, 21, 15, .82);   /*  9.59:1  body copy             */
+    --ink-muted: rgba(22, 21, 15, .70);   /*  6.38:1  secondary, captions   */
+    --ink-faint: rgba(22, 21, 15, .62);   /*  4.85:1  microcopy, AA floor   */
+
+    /* Rules and washes. --rule-ink is the design's workhorse separator (18 uses);
+     * the rgba steps are the soft variants. */
+    --rule-ink:    1px solid var(--ink);
+    --rule-double: 3px double var(--ink);
+    --rule-soft:   rgba(22, 21, 15, .16);
+    --rule:        rgba(22, 21, 15, .25);
+    --rule-strong: rgba(22, 21, 15, .35);
+    --wash:        rgba(22, 21, 15, .035); /* pinstripe backdrop wash       */
+    --track:       rgba(22, 21, 15, .14);  /* progress-bar track            */
+
+    /* Cream-on-ink ramp for the dark privacy band, matching the design's four
+     * cream alphas exactly (.22 rules, .55 kicker, .70 labels, .78 body). All
+     * clear AA on ink: 9.93 / 8.19 / 5.49. */
+    --cream-body:  rgba(242, 239, 228, .78);
+    --cream-muted: rgba(242, 239, 228, .70);
+    --cream-faint: rgba(242, 239, 228, .55);
+    --cream-rule:  rgba(242, 239, 228, .22);
+
+    /* Accent. #c0341f is the authored value throughout the canvas; the export's
+     * props JSON lists #f2b418 as "default", but that is a design-tool control
+     * artifact, not the design (locked in plans/curatedflavors-website.md s1).
+     * --accent-deep is a pressed/active state: it appears once in the export and
+     * outside the 1a slice, so it is offered rather than inherited. Do not treat
+     * its absence from a section as design drift.
+     *
+     * Contrast: accent on --page is 4.86:1 (passes AA for normal text). Accent on
+     * --ink is only 3.27:1, so inside .band--ink it is large-text-only. The
+     * design's one such use is Bodoni 700 30px, which qualifies. */
+    --accent:      #c0341f;
+    --accent-deep: #8f2415;
+
+    /* Type stacks. Georgia is the deliberate serif fallback the design names. */
+    --font-display: 'Bodoni Moda', Georgia, serif;
+    --font-body:    'Newsreader', Georgia, serif;
+    --font-mono:    'Space Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* Fluid display type. Upper bounds are the design's authored desktop sizes.
+     * Defined once so EP01.S02.T13 retunes curves in one place.
+     *
+     * The masthead floor is 3.4rem, not the 4rem it looks like it should be, and
+     * the reason is measurable: "NYC EATS" in Bodoni 900 at letter-spacing -.02em
+     * is 5.1316em wide, so a 64px floor renders 328px into the 284px available at
+     * a 320px viewport. That overflowed the page (scrollWidth 347 against
+     * innerWidth 320). Ceiling values were verified; this floor was not, until a
+     * review caught it. 54.4px renders 279px, leaving about 5px of slack. Any
+     * change to the masthead's weight or tracking changes this number. */
+    --fs-masthead: clamp(3.4rem, 10.5vw, 8.25rem);   /*  54 ->  132px */
+    --fs-hero:     clamp(2rem, 4.55vw, 3.625rem);    /*  32 ->   58px */
+    --fs-h3:       clamp(1.75rem, 3.3vw, 2.625rem);  /*  28 ->   42px */
+    --fs-stat:     clamp(1.5rem, 2.7vw, 2.125rem);   /*  24 ->   34px */
+
+    /* Fixed display sizes the design uses at one size only. Tokened so sections
+     * do not reintroduce them as magic numbers. */
+    --fs-no:      30px;    /* privacy 2x2 "No"          */
+    --fs-teaser-h: 26px;   /* blog teaser h4            */
+    --fs-venue:   24px;    /* featured happy-hour venue */
+    --fs-row:     19px;    /* event and secondary rows  */
+    --fs-name:    18px;    /* ledger names              */
+
+    /* Body and mono scale. --fs-body is the design's authored size; in rem so it
+     * still responds to a reader's browser font-size preference. */
+    --fs-body:      1.03125rem;  /* 16.5px at a 16px root */
+    --fs-body-sm:   16px;      /* markets, events, about prose      */
+    --fs-teaser:    15.5px;    /* blog teaser copy only             */
+    --fs-body-xs:   13.5px;
+    --fs-mono:      11px;
+    --fs-mono-sm:   9.5px;
+    --fs-mono-lg:   12px;
+    --lh-body:      1.6;    /* dominant in the export (7 uses)                */
+    --lh-letter:    1.58;   /* the two-column editor letter only (S02.T03)     */
+
+    /* Every Bodoni rule must set a line-height, and this is it.
+     *
+     * Bodoni Moda's line box is about 34 percent taller than Georgia's, the
+     * fallback that paints first under font-display: swap. Any Bodoni element that
+     * inherits its line-height grows when the webfont arrives, which is layout
+     * shift against the mobile Lighthouse budget the epic gates on (S07.T01).
+     * Three places in the design are exposed: the 19px venue names and the 19px
+     * ledger score set no line-height at all. */
+    --lh-display: 1.05;
+
+    /* The drop cap tracks the body text it sits in, not the viewport: at two body
+     * line-heights it spans exactly two lines, which is what makes it read as a
+     * drop cap rather than a large letter. Expressed as the relationship instead
+     * of the number (52.1px today) so it follows any --fs-body change.
+     *
+     * It is therefore larger than --fs-hero below about 1140px. That is correct
+     * and intended, and EP01.S02.T13's type-monotonicity check must exempt it: a
+     * drop cap is body furniture, not a heading. */
+    --fs-dropcap: calc(var(--fs-body) * var(--lh-body) * 2);
+
+    /* Space */
+    --gutter:        clamp(18px, 3.44vw, 44px);  /* 44px at the 1280px design width */
+    --pad-section:   52px;    /* the design's band rhythm: 52px, one band at 56px */
+    --page-max:      1280px;  /* the design canvas width; a newspaper has a measure */
+    --anchor-offset: 16px;    /* breathing room when a nav anchor lands */
+  }
+}
+
+/* ----------------------------------------------------------------- base ---- */
+
+@layer base {
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: var(--lh-display);
+    letter-spacing: -.01em;
+  }
+
+  /* The masthead. Bound here rather than in EP01.S02.T01 because there is exactly
+   * one h1 on the site and it is the masthead, and because leaving --fs-masthead
+   * with no consumer is how a token scale quietly becomes decoration. Its authored
+   * weight (900), line-height (.86) and tracking (-.02em) all differ from the
+   * shared heading rule above.
+   *
+   * S05.T03's 404 page has a smaller mini-masthead and is expected to override. */
+  h1 {
+    font-size: var(--fs-masthead);
+    font-weight: 900;
+    line-height: .86;
+    letter-spacing: -.02em;
+  }
+
+  h2 { font-size: var(--fs-hero); }
+  h3 { font-size: var(--fs-h3); }
+  h4 { font-size: var(--fs-teaser-h); }
+
+  /* Bodoni on a non-heading element (venue names, ledger scores, stat figures).
+   * Always use this rather than setting font-family directly, so the explicit
+   * line-height that prevents font-swap layout shift comes along with it. There is
+   * no italic variant on purpose: see the constraint note in fonts.css. */
+  .display {
+    font-family: var(--font-display);
+    line-height: var(--lh-display);
+  }
+
+  a { color: inherit; text-decoration: none; }
+}
+
+/* --------------------------------------------------------------- layout ---- */
+
+@layer layout {
+  /* Horizontal rhythm: one measure, one gutter token.
+   *
+   * INVARIANT: .wrap goes on each section, never on <main>. A .wrap on main would
+   * make full-bleed impossible for any descendant (measured: a nested band comes
+   * back exactly 1280px wide, clipped to the parent's max-width). */
+  .wrap {
+    max-width: var(--page-max);
+    margin-inline: auto;
+  }
+
+  .section {
+    padding-inline: var(--gutter);
+  }
+
+  /* Vertical rhythm. The page is a stack of ruled bands, each padded --pad-section
+   * with a hairline rule beneath. */
+  .band-row {
+    padding-block: var(--pad-section);
+    border-bottom: var(--rule-ink);
+  }
+
+  .band-row--tall { --pad-section: 56px; }
+
+  /* The dark band (privacy, section 05).
+   *
+   * It re-points the ink tokens instead of introducing a parallel set of cream
+   * classes, so .kicker, .chip, .rule-grid and every rule keep working unchanged
+   * inside it. This is why the cream ramp mirrors the ink ramp.
+   *
+   * Note it stays INSIDE the measure rather than bleeding full-width: in the export
+   * the band spans the 1280px card exactly, and every hairline on the page stops at
+   * the measure. A full-bleed band would be the one element ignoring it. */
+  .band--ink {
+    background: var(--ink-solid);
+    color: var(--page);
+    --ink: var(--page);
+    --ink-body: var(--cream-body);
+    --ink-muted: var(--cream-muted);
+    --ink-faint: var(--cream-faint);
+    --rule: var(--cream-rule);
+    --rule-soft: var(--cream-rule);
+    --rule-strong: var(--cream-rule);
+  }
+
+  /* The recurring two-up section grid (five uses). Stacks at the shared 900px
+   * breakpoint so thirteen section tasks do not each pick their own. */
+  .duo {
+    display: grid;
+    grid-template-columns: var(--duo-cols, 1fr 1fr);
+    gap: var(--duo-gap, 48px);
+    align-items: var(--duo-align, start);
+  }
+
+  /* The 03/04 two-up band (markets | events). Distinct from .duo: its halves are
+   * divided by a centre vertical rule rather than a gap, and that rule has to become
+   * a horizontal rule when the halves stack, without doubling up against the band's
+   * own bottom rule. EP01.S02.T08 owns the cell padding, which is asymmetric in the
+   * design (48px 40px 48px 44px on the left, mirrored on the right) precisely
+   * because of the centre rule. */
+  .twoup {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: var(--rule-ink);
+  }
+
+  .twoup > * + * { border-left: var(--rule-ink); }
+
+  @media (max-width: 900px) {
+    .duo { grid-template-columns: 1fr; gap: var(--duo-gap-sm, 34px); }
+
+    .twoup { grid-template-columns: 1fr; }
+    .twoup > * + * {
+      border-left: 0;
+      border-top: var(--rule-ink);
+    }
+  }
+
+  /* Anchor targets land with room to breathe rather than flush under the ribbon.
+   * On [id] rather than :target so it is unconditional: :target only matches once
+   * the fragment already points at the element, which leaves programmatic scrolling
+   * (scrollIntoView, find-in-page) with no offset at all. */
+  [id] { scroll-margin-top: var(--anchor-offset); }
+}
+
+/* ----------------------------------------------------------- primitives ---- */
+
+@layer primitives {
+  /* Space Mono label. Tracking varies from .08em to .42em across contexts, so it is
+   * a custom property. Namespaced because custom properties inherit: an unprefixed
+   * --ls set on a wrapper would leak into every descendant kicker, and S02.T06's
+   * kicker pair has two different trackings as siblings. Set it per element. */
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: var(--kicker-fs, 10px);
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: var(--kicker-ls, .16em);
+    text-transform: uppercase;
+  }
+
+  .kicker--light { font-weight: 400; }
+
+  /* Small mono microcopy: meta lines, captions, placeholder labels. About a dozen
+   * uses across the page. */
+  .meta {
+    font: 400 var(--fs-mono)/1.55 var(--font-mono);
+    color: var(--ink-faint);
+  }
+
+  /* Ruled label. Measured: border 1px --rule-strong, padding 5px 10px,
+   * Space Mono 400 10px/1, letter-spacing .08em. The design's chip text is written
+   * uppercase in the markup, so it never needed text-transform; setting it here
+   * means section tasks can write natural case and still match the render. */
+  .chip {
+    display: inline-block;
+    border: 1px solid var(--rule-strong);
+    padding: 5px 10px;
+    font: 400 10px/1 var(--font-mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  /* The accent variant re-borders and bolds, and deliberately does NOT recolour the
+   * text: export line 175 sets only the border and the weight, so accent text here
+   * would be drift, and it would drop 10px bold from 15.89:1 to 4.86:1. */
+  .chip--accent {
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* "SOON" badge beside the Blog nav item and on the teaser card. The design draws
+   * it at two sizes (8px / 1px 4px in the nav ribbon, 8.5px / 2px 5px on the teaser
+   * card), so the two dimensions that differ are custom properties rather than a
+   * second class. Defaults are the teaser size. Accent text IS correct here (both
+   * export lines 61 and 241 set it). */
+  .badge-soon {
+    display: inline-block;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: var(--badge-pad, 2px 5px);
+    font: 700 var(--badge-fs, 8.5px)/1 var(--font-mono);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+
+  /* Numbered section kicker: the accent "01".."05" chip beside a mono label. The
+   * design repeats this markup byte-identically in all five numbered sections, so it
+   * lives here rather than being reinvented per section. Inside .band--ink the
+   * number keeps its accent background and cream text unchanged. */
+  .section-kicker {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .section-kicker__num {
+    background: var(--accent);
+    color: var(--page);
+    font: 700 10px/1 var(--font-mono);
+    letter-spacing: .15em;
+    padding: 5px 8px;
+  }
+
+  .section-kicker__label {
+    font: 700 10px/1 var(--font-mono);
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* Hairline-separated cell grid, drawn by letting a 1px gap reveal the container
+   * background. The design uses it twice, in two colourways: ink-on-cream for the
+   * capability grid, cream-on-ink inside the privacy band. Inside .band--ink the
+   * token repointing handles the colour; only the cell background needs the variant. */
+  .rule-grid {
+    display: grid;
+    gap: 1px;
+    background: var(--rule-grid-color, rgba(22, 21, 15, .28));
+    border: 1px solid var(--rule-grid-color, rgba(22, 21, 15, .28));
+  }
+
+  .rule-grid > * { background: var(--rule-grid-cell, var(--page)); }
+
+  .band--ink .rule-grid {
+    --rule-grid-color: var(--cream-rule);
+    --rule-grid-cell: var(--ink-solid);
+  }
+
+  /* Card surface: paper stock on the cream page, ruled header and footer zones. Used
+   * by the happy-hour live card, the ledger card, and the blog teaser. */
+  .card {
+    background: var(--paper);
+    border: var(--rule-ink);
+  }
+
+  .card__head {
+    border-bottom: var(--rule-ink);
+    padding: 11px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font: 700 10px/1 var(--font-mono);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  .card__foot {
+    border-top: 1px solid var(--rule);
+    padding: 11px 16px;
+  }
+
+  /* Solid ink CTA. Hover to accent is the only hover state the design specifies. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--ink);
+    color: var(--page);
+    padding: 15px 26px;
+    font: 700 var(--fs-mono-lg)/1 var(--font-mono);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    border: 0;
+    cursor: pointer;
+    transition: background-color .18s ease;
+  }
+
+  /* Outlined accent button (the mailto in the About block). */
+  .btn--outline {
+    background: none;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 11px 18px;
+    font-size: var(--fs-mono);
+    letter-spacing: .12em;
+  }
+
+  .link-ink { border-bottom: 1px solid var(--rule-strong); }
+
+  /* Hover only where hover exists. On iOS Safari, which is the primary audience
+   * (the traffic source is Instagram), :hover latches after a tap and the CTA would
+   * stay accent-red after being pressed. :active below covers touch feedback. */
+  @media (hover: hover) {
+    .btn:hover { background: var(--accent); }
+    .btn--outline:hover { background: var(--accent); color: var(--page); }
+    .link-ink:hover { color: var(--accent); border-bottom-color: var(--accent); }
+  }
+
+  .btn:active { background: var(--accent-deep); }
+  .btn--outline:active {
+    background: var(--accent-deep);
+    border-color: var(--accent-deep);
+    color: var(--page);
+  }
+
+  /* Rules. --rule-ink is the 18-use workhorse; .rule-soft is the rgba variant. */
+  .rule-ink    { border-bottom: var(--rule-ink); }
+  .rule-soft   { border-bottom: 1px solid var(--rule); }
+  .rule-double { border-bottom: var(--rule-double); }
+
+  /* Progress bar (happy-hour card). Track and fill are both 5px in the design. */
+  .bar { height: 5px; background: var(--track); }
+  .bar__fill {
+    height: 5px;
+    background: var(--accent);
+    transition: width .3s linear;
+  }
+
+  /* Pinstripe wash, used as the hero backdrop and inside empty phone screens. The
+   * stripe pitch differs by context (9px behind the hero and in its screen, 8px in
+   * the mini screens). Decorative: elements carrying it should be aria-hidden. */
+  .pinstripe {
+    --stripe: 9px;
+    background: repeating-linear-gradient(135deg,
+      var(--pin-a) 0 var(--stripe),
+      var(--pin-b) var(--stripe) calc(var(--stripe) * 2));
+  }
+
+  .pinstripe--fine { --stripe: 8px; }
+
+  /* The hero backdrop, which is not the same texture as the phone screens: vertical
+   * hairlines at the --wash alpha rather than diagonal pinstripes. */
+  .pinstripe--wash {
+    background: repeating-linear-gradient(90deg,
+      var(--wash) 0 1px,
+      transparent 1px 7px);
+  }
+
+  /* ------------------------------------------------------------- a11y ---- */
+
+  /* For headings a landmark needs but the design does not draw (the stats band has
+   * no visible heading anywhere in the export). */
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* The design has no focus states: a canvas never receives a tab key. Defining
+   * them once here means no section task has to remember, which is what makes
+   * EP01.S05.T04's keyboard criterion pass by construction. The ring clears 3:1 on
+   * cream (4.86) and on the ink band (3.27). */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Skip link: off-screen until focused, then pinned top-left over the masthead. */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 10;
+    background: var(--ink);
+    color: var(--page);
+    padding: 10px 16px;
+    font: 700 var(--fs-mono)/1 var(--font-mono);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  .skip-link:focus { left: 0; }
+}
+
+/* ------------------------------------------------------ reduced motion ---- */
+
+/* Honoured by EP01.S03.T03 (countdown bar) and S03.T04 (reveal on scroll). Delays
+ * are zeroed as well as durations, so a staggered reveal cannot leave content
+ * waiting. Unlayered so it wins over any section rule.
+ *
+ * Note: the scroll-behavior line is currently a no-op, since nothing sets
+ * scroll-behavior: smooth. It stays as a guard for whoever adds it. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-delay: -1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==========================================================================
+   EP01.S02 section styles go below this line, inside @layer sections.
+   One commented block per section task, in page order. Do not edit a primitive
+   above to fix a single section.
+   ========================================================================== */
+
+@layer sections {
+
+  /* ---------------------------------------------- S02.T01 top bar + masthead ---- */
+
+  /* Export lines 42-46. Three mono items between the page edge and a 3px double
+   * rule. The middle item is the one the design can afford to lose on a phone. */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding-block: 9px;
+    border-bottom: var(--rule-double);
+  }
+
+  .topbar__item {
+    font: 400 10px/1 var(--font-mono);
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .topbar__item--accent {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Export lines 48-52. Centred kicker, the masthead h1 (sized, weighted and
+   * tracked in the base layer, since there is exactly one h1 on the site), tagline. */
+  .masthead {
+    padding-block: 34px 18px;
+    text-align: center;
+    border-bottom: var(--rule-ink);
+  }
+
+  /* .42em is the widest tracking on the page and the reason .kicker takes a size
+   * and tracking variable rather than hardcoding them. */
+  .masthead__kicker {
+    --kicker-ls: .42em;
+    color: var(--ink-faint);
+    margin-bottom: 14px;
+  }
+
+  .masthead__tagline {
+    --kicker-fs: 12px;
+    --kicker-ls: .2em;
+    color: var(--ink-faint);
+    margin-top: 16px;
+  }
+
+  @media (max-width: 640px) {
+    /* The three-up bar collides here. Drop the middle item rather than let the
+     * items wrap into an uneven pile: the Vol/No line and the App Store note are
+     * the two that carry meaning. */
+    .topbar__item--wide { display: none; }
+
+    /* .42em tracking on a 320px screen pushes the kicker to three ragged lines. */
+    .masthead__kicker { --kicker-ls: .22em; }
+  }
+
+  /* --------------------------------------------------- S02.T02 nav ribbon ---- */
+
+  /* Export lines 54-62. Centred mono row between hairline rules. */
+  .ribbon {
+    padding-block: 11px;
+    border-bottom: var(--rule-ink);
+  }
+
+  .ribbon__list {
+    display: flex;
+    justify-content: center;
+    /* The gutter lives on the list, not on the nav, because below 760px the list
+     * becomes a scroller that must bleed to the viewport edges while its items stay
+     * inset. One token, every width, no overridden-to-zero section padding. */
+    padding-inline: var(--gutter);
+    gap: 30px;
+    font: 700 10px/1 var(--font-mono);
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  /* The Blog item is deliberately not a link: the blog is an epic non-goal, so
+   * there is nowhere for it to go. The design draws it at rgba(22,21,15,.4), which
+   * measures 2.60:1 and fails WCAG AA; it is not a disabled form control, so no
+   * exemption applies. --ink-faint (4.85:1) still reads as clearly de-emphasised
+   * beside the full-ink links. */
+  .ribbon__soon {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ink-faint);
+    --badge-fs: 8px;
+    --badge-pad: 1px 4px;
+  }
+
+  @media (max-width: 760px) {
+    /* Seven items will not fit, and wrapping them produces an uneven pile. A single
+     * scrolling row keeps the ribbon reading as a ribbon. The items stay real links
+     * in DOM order, so keyboard reachability is unaffected and focusing an
+     * off-screen item scrolls it into view. */
+    .ribbon__list {
+      justify-content: flex-start;
+      overflow-x: auto;
+      scrollbar-width: none;
+      gap: 22px;
+      /* Edge fade hinting that there is more to the right. */
+      mask-image: linear-gradient(90deg, transparent 0, #000 var(--gutter),
+                  #000 calc(100% - 28px), transparent 100%);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .ribbon__list::-webkit-scrollbar { display: none; }
+
+    .ribbon__list > li { flex: none; }
+  }
+
+  /* ------------------------------------------------ S02.T03 editor letter ---- */
+
+  /* Export lines 65-79. The hero is the page's widest two-column region: the letter
+   * carries a right-hand rule that separates it from the phone column. */
+  .hero {
+    --duo-cols: 1.55fr 1fr;
+    --duo-gap: 0;
+    display: grid;
+    grid-template-columns: var(--duo-cols);
+    border-bottom: var(--rule-ink);
+  }
+
+  .hero__letter {
+    padding: 44px 40px 40px var(--gutter);
+    border-right: var(--rule-ink);
+  }
+
+  .hero__kicker {
+    --kicker-ls: .2em;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  /* The hero headline's own line-height and tracking differ from the shared heading
+   * rule (1.02 and -.015em against 1.05 and -.01em), so they are set here. */
+  #hero-title {
+    line-height: 1.02;
+    letter-spacing: -.015em;
+  }
+
+  .hero__divider {
+    width: 70px;
+    height: 2px;
+    background: var(--ink);
+    margin: 26px 0;
+  }
+
+  /* Two-column letter with a column rule, the design's own technique. */
+  .letter {
+    columns: 2;
+    column-gap: 34px;
+    column-rule: 1px solid var(--rule);
+    line-height: var(--lh-letter);
+    color: var(--ink-body);
+  }
+
+  .letter > p { margin: 0 0 13px; }
+  .letter > p:last-child { margin-bottom: 0; }
+
+  /* Float drop cap, sized against body text rather than the viewport: see the
+   * --fs-dropcap note in the tokens layer. aria-hidden is wrong here (it would
+   * remove the word's first letter from the accessible name), so the span carries
+   * no ARIA and the letter reads normally: "So I spent a year...". */
+  .letter__cap {
+    float: left;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--fs-dropcap);
+    line-height: .8;
+    padding: 5px 8px 0 0;
+  }
+
+  .hero__cta {
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .btn__arrow { font-size: 15px; }
+
+  .hero__meta { margin: 0; }
+
+  /* No shipped font contains U+2605, so the rating star is drawn. A bare character
+   * would fall back per glyph to a platform symbol or colour-emoji face, which in an
+   * 11px ink-grey mono line looks like a rendering bug. currentColor keeps it in
+   * step with the surrounding text. */
+  .star {
+    display: inline-block;
+    vertical-align: -.08em;
+  }
+
+  .hero__byline {
+    margin-top: 26px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    font: italic 400 14px/1.5 var(--font-body);
+    color: var(--ink-muted);
+  }
+
+  @media (max-width: 1080px) {
+    /* Letter first, phone after: the letter is the argument, the phone is the proof. */
+    .hero { grid-template-columns: 1fr; }
+
+    .hero__letter {
+      padding: 34px var(--gutter) 30px;
+      border-right: 0;
+      border-bottom: var(--rule-ink);
+    }
+  }
+
+  @media (max-width: 900px) {
+    /* One text column below 900px, drop cap retained. */
+    .letter { columns: 1; }
+  }
+
+  /* --------------------------------------------------- S02.T04 phone frame ---- */
+
+  /* Export lines 80-103 (hero, 292px) and 181-198 (minis, 118px).
+   *
+   * The whole component derives from one number, --phone-w, via em: font-size is set
+   * to a 1/100 slice of the width so every ornament can be expressed as a fraction
+   * that holds at any size. The design's two frames are hand-tuned rather than
+   * proportional (mini/hero width is 0.404 but padding is 0.60, border 0.50, radius
+   * 0.44), so the em scale reproduces the hero exactly and the mini variant nudges
+   * only the two parts where the design deviates most. Everything else scales.
+   *
+   * The fake status bar in the export is deliberately not rebuilt: it existed only
+   * because the canvas had no screenshot, it was set in Archivo (a family this site
+   * does not ship), and the real captures carry their own status bar via
+   * simctl status_bar override. */
+  .phone {
+    --phone-w: 292px;
+    --bezel: #2e2c22;
+    /* Ornament scale. The design's mini is not a scaled hero: its width is 0.404 of
+     * the hero's but its radii and island scale at about 0.44. One knob captures
+     * that whole family of deviations (0.44 / 0.404 = 1.09) instead of hand-setting
+     * five values. The 1-to-3px slivers (border, indicator, side buttons) are set
+     * per variant instead, because sub-pixel em maths on a 2px element is
+     * meaningless and browsers round border widths down to whole pixels anyway. */
+    --orn: 1;
+    --bezel-w: 2px;
+    position: relative;
+    width: var(--phone-w);
+    font-size: calc(var(--phone-w) / 100);   /* 1em = 1% of the width */
+    padding: 1.71em;                          /* 5px at hero */
+    border: var(--bezel-w) solid var(--bezel);
+    border-radius: calc(18.5em * var(--orn)); /* 54px at hero */
+    background: linear-gradient(145deg, #4a4738, #16150f 42%, #16150f 62%, #3a3830);
+    box-shadow: 0 8.9em 18.5em rgba(22, 21, 15, .34);
+  }
+
+  .phone__screen {
+    position: relative;
+    aspect-ratio: 9 / 19.5;
+    border-radius: calc(16.44em * var(--orn)); /* 48px at hero */
+    overflow: hidden;
+    background: var(--pin-a);
+  }
+
+  .phone__slot {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    text-align: center;
+  }
+
+  /* A screenshot must fill the 9:19.5 screen, not sit centred at its intrinsic
+   * size. object-fit: cover also absorbs the fraction of a pixel the capture's
+   * real ratio (0.4600) differs from the slot's (0.4615). */
+  .phone__slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Placeholder label, removed by EP01.S04.T03 when a real screenshot lands. */
+  .phone__placeholder {
+    font: 400 var(--fs-mono-sm)/1.5 var(--font-mono);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .phone__island {
+    position: absolute;
+    top: calc(4.45em * var(--orn));            /* 13px at hero */
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(29.45em * var(--orn));         /* 86px at hero */
+    height: calc(9.25em * var(--orn));         /* 27px at hero */
+    border-radius: calc(5.48em * var(--orn));
+    background: var(--island);
+  }
+
+  .phone__indicator {
+    position: absolute;
+    bottom: var(--ind-bottom, 9px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: var(--ind-w, 112px);
+    height: var(--ind-h, 5px);
+    border-radius: 3px;
+    background: rgba(22, 21, 15, .42);
+  }
+
+  /* Side buttons. The design draws four: silence and two volume on the left, power
+   * on the right, each a 3px sliver sitting 4px outside the bezel. */
+  .phone__btn {
+    position: absolute;
+    width: var(--btn-w, 3px);
+    background: linear-gradient(90deg, #4a4738, #26241c);
+  }
+
+  .phone__btn--silence { left: -1.37em; top: 35.6em;  height: 8.22em;  border-radius: .68em 0 0 .68em; }
+  .phone__btn--vol-up  { left: -1.37em; top: 50em;    height: 15.07em; border-radius: .68em 0 0 .68em; }
+  .phone__btn--vol-dn  { left: -1.37em; top: 69.2em;  height: 15.07em; border-radius: .68em 0 0 .68em; }
+  .phone__btn--power   { right: -1.37em; top: 57.5em; height: 22.6em;  border-radius: 0 .68em .68em 0;
+                         background: linear-gradient(270deg, #4a4738, #26241c); }
+
+  /* Mini variant, reused by EP01.S02.T08 for the markets screens. Two overrides
+   * where the design is not proportional: padding would come out 2px against the
+   * design's 3px, and the indicator 2px against 3px. */
+  .phone--mini {
+    --phone-w: 118px;
+    --orn: 1.09;
+    --bezel-w: 1px;
+    --ind-w: 46px;
+    --ind-h: 3px;
+    --ind-bottom: 5px;
+    --btn-w: 2px;
+    padding: 2.54em;                           /* 3px, the design's own value */
+    box-shadow: 0 6.8em 15.3em rgba(22, 21, 15, .28);
+  }
+
+  .phone--mini .phone__slot { --stripe: 8px; }
+
+  /* The design draws only two buttons on the mini, at their own positions (export
+   * 182-183), not scaled versions of the hero's four. */
+  .phone--mini .phone__btn--vol-up,
+  .phone--mini .phone__btn--vol-dn { display: none; }
+  .phone--mini .phone__btn--silence { top: 44px; height: 26px; left: -2px; }
+  .phone--mini .phone__btn--power   { top: 52px; height: 30px; right: -2px; }
+
+  /* The hero's phone sits centred on the vertical-hairline backdrop. */
+  .hero__phone {
+    display: grid;
+    place-items: center;
+    padding: 44px var(--gutter) 40px 40px;
+  }
+
+  @media (max-width: 1080px) {
+    .hero__phone { padding: 30px var(--gutter) 34px; }
+  }
+
+  @media (max-width: 360px) {
+    /* Below this the 292px frame plus gutters no longer fits. */
+    .phone--hero { --phone-w: 244px; }
+  }
+
+  /* ---------------------------------------------------- S02.T05 stats band ---- */
+
+  /* Export lines 106-112. Five ruled cells, bottom-ruled band. A list, so a screen
+   * reader announces "list, five items" rather than reading five loose numbers;
+   * role="list" is explicit because the reset removes native list semantics in
+   * Safari with VoiceOver. */
+  .stats-band { border-bottom: var(--rule-ink); }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .stat {
+    padding: 22px 18px;
+    text-align: center;
+    border-right: 1px solid var(--rule);
+  }
+
+  /* No orphan border on the last cell in a row. */
+  .stat:last-child { border-right: 0; }
+
+  .stat__figure {
+    display: block;
+    font-weight: 700;
+    font-size: var(--fs-stat);
+    line-height: 1;
+  }
+
+  .stat__figure--accent { color: var(--accent); }
+
+  .stat__label {
+    display: block;
+    font: 400 var(--fs-mono-sm)/1 var(--font-mono);
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: 7px;
+  }
+
+  @media (max-width: 760px) {
+    /* 2 + 2 + 1: five cells will not read at phone width, and a 2+3 split leaves the
+     * middle row cramped. The trailing "0 Trackers" cell spans the full width, which
+     * suits it: it is the one stat that is a statement rather than a count. */
+    .stats { grid-template-columns: 1fr 1fr; }
+
+    /* Rebuild the rules for a wrapped grid: every cell gets a bottom rule, the
+     * right-hand rule only where a cell is not last in its row, and the final row
+     * drops its bottom rule since the band already has one. */
+    .stat {
+      border-right: 0;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .stat:nth-child(odd) { border-right: 1px solid var(--rule); }
+
+    .stat:last-child {
+      grid-column: 1 / -1;
+      border-right: 0;
+      border-bottom: 0;
+    }
+  }
+
+  /* ---------------------------------------------------- S02.T06 happy hours ---- */
+
+  /* Export lines 114-139. Shared prose and chip rows are defined here because
+   * sections 01 through 05 all use them. */
+  .prose {
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    color: var(--ink-body);
+    margin-bottom: 14px;
+  }
+
+  /* Deliberately no :last-of-type rule. It matched the wrong paragraph wherever a
+   * p.chips follows the copy, and its (0,2,0) specificity silently beat section
+   * overrides. Each section states its own trailing margin, from the export. */
+  #happy-hours .prose + .prose { margin-bottom: 20px; }   /* export 119 */
+  #restaurants .prose + .prose { margin-bottom: 18px; }   /* export 147 */
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+  }
+
+  /* The live card. */
+  .hh__count { color: var(--accent); }
+
+  .hh__featured { padding: 16px; }
+
+  .hh__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .hh__name {
+    font-weight: 700;
+    font-size: var(--fs-venue);
+    line-height: 1.1;
+  }
+
+  .hh__badge {
+    font: 700 var(--fs-mono)/1 var(--font-mono);
+    color: var(--accent);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .hh__meta {
+    margin: 5px 0 11px;
+    font: 400 var(--fs-mono-lg)/1 var(--font-mono);
+    color: var(--ink-faint);
+  }
+
+  .hh__countdown {
+    margin: 7px 0 0;
+    font: 400 var(--fs-mono)/1 var(--font-mono);
+    color: var(--ink-muted);
+  }
+
+  /* Secondary rows. */
+  .hh__row {
+    border-top: 1px solid var(--rule);
+    padding: 13px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .hh__row-name {
+    display: block;
+    font-weight: 700;
+    font-size: var(--fs-row);
+  }
+
+  .hh__row-meta {
+    display: block;
+    font: 400 var(--fs-mono)/1 var(--font-mono);
+    color: var(--ink-faint);
+    margin-top: 4px;
+  }
+
+  /* The design encodes urgency in the ink alpha: .75 for STARTS SOON against .45
+   * for LATER TODAY. Consolidating to --ink-muted and --ink-faint narrows that gap,
+   * because .45 measures 2.89:1 and fails AA at this size. The three-step hierarchy
+   * still reads (accent, then muted, then faint) but it is flatter than the canvas
+   * by design, not by accident. */
+  .hh__when {
+    font: 700 10px/1 var(--font-mono);
+    color: var(--ink-muted);
+    text-align: right;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .hh__when--later { color: var(--ink-faint); }
+
+  /* The label above is uppercase in the design, the time below it is not
+   * ("STARTS SOON" then "in 24m"). Uppercasing lives on the parent so hydration can
+   * pass natural-case labels, so the sub-line opts out. */
+  .hh__when-sub {
+    font-weight: 400;
+    color: var(--ink-faint);
+    text-transform: none;
+  }
+
+  .hh__caption {
+    border-top: var(--rule-ink);
+    padding: 9px 16px;
+    margin: 0;
+    font: 400 var(--fs-mono-sm)/1.4 var(--font-mono);
+    color: var(--ink-faint);
+    text-align: center;
+  }
+
+  @media (max-width: 900px) {
+    /* Card after text, per the task. .duo already stacks at this width. */
+    .hh__featured, .hh__row { padding-inline: 14px; }
+  }
+
+  /* ---------------------------------------------------- S02.T07 restaurants ---- */
+
+  /* Export lines 141-166. The kicker sits above the grid here, unlike section 01. */
+  .duo--restaurants { --duo-cols: 1.15fr 1fr; }
+
+  /* 2x2 capability grid on the shared rule-grid primitive. */
+  .caps { grid-template-columns: 1fr 1fr; }
+
+  .cap { padding: 13px 14px; }
+
+  .cap__title {
+    display: block;
+    font: 700 10px/1 var(--font-mono);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .cap__desc {
+    display: block;
+    font-size: var(--fs-body-xs);
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+
+  /* Ledger card. */
+  .ledger__by { color: var(--ink-faint); }
+
+  .ledger__row {
+    display: grid;
+    grid-template-columns: 34px 1fr auto;
+    gap: 12px;
+    align-items: baseline;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+
+  .ledger__rank {
+    font: 400 var(--fs-mono-lg)/1 var(--font-mono);
+    color: var(--ink-faint);
+  }
+
+  .ledger__name {
+    display: block;
+    font-weight: 700;
+    font-size: var(--fs-name);
+    line-height: 1.15;
+  }
+
+  .ledger__meta {
+    display: block;
+    font: 400 var(--fs-mono)/1 var(--font-mono);
+    color: var(--ink-faint);
+    margin-top: 4px;
+  }
+
+  .ledger__score {
+    font-weight: 700;
+    font-size: var(--fs-row);
+    color: var(--accent);
+  }
+
+  /* No border-top: the last ledger row already draws the rule above this caption,
+   * so .card__foot would double it. */
+  .ledger__caption {
+    padding: 9px 16px;
+    margin: 0;
+    font: 400 var(--fs-mono-sm)/1.4 var(--font-mono);
+    color: var(--ink-faint);
+    text-align: center;
+  }
+
+  @media (max-width: 420px) {
+    /* At the narrowest widths the rank column steals room a long venue name needs.
+     * Names must wrap rather than truncate, so the rank tightens instead. */
+    .ledger__row { grid-template-columns: 24px 1fr auto; gap: 8px; padding-inline: 12px; }
+    .caps { grid-template-columns: 1fr; }
+  }
+
+  /* ------------------------------------------------------- S02.T08 markets ---- */
+
+  /* Export lines 169-199. The band's cells are padded asymmetrically in the design
+   * (40px on the inner edge, the full gutter on the outer) precisely because the
+   * centre rule sits between them. */
+  .twoup__cell {
+    padding-block: 48px;
+  }
+
+  .twoup__cell--left  { padding-inline: 0 40px; }
+  .twoup__cell--right { padding-inline: 40px 0; }
+
+  /* Sections 03 and 04 use a smaller headline than 01 and 02 (34px against 42px)
+   * with a looser line-height, because they sit in half-width cells. */
+  /* Export 117 and 145: margin:0 0 16px. Without this the 42px headline sits flush
+   * against its first paragraph. */
+  #happy-hours-title,
+  #restaurants-title { margin-bottom: 16px; }
+
+  .band-h3 {
+    font-size: var(--fs-stat);
+    line-height: 1.08;
+    margin-bottom: 14px;
+  }
+
+  .prose--tight {
+    font-size: var(--fs-body-sm);
+    margin-bottom: 18px;
+  }
+
+  .minis {
+    margin-top: 22px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 900px) {
+    /* Stacked: the asymmetric inner padding has nothing to sit against. */
+    .twoup__cell--left,
+    .twoup__cell--right { padding-inline: 0; }
+  }
+
+  /* -------------------------------------------------------- S02.T09 events ---- */
+
+  /* Export lines 201-214. The list has an ink rule above it and a hairline under
+   * each row, so the ruled block reads as a printed schedule. */
+  .events { border-top: var(--rule-ink); }
+
+  .ev {
+    display: grid;
+    grid-template-columns: 78px 1fr auto;
+    gap: 14px;
+    align-items: baseline;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .ev__month {
+    font: 700 10px/1 var(--font-mono);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .ev__name {
+    font-weight: 700;
+    font-size: var(--fs-row);
+    line-height: 1.2;
+  }
+
+  .ev__where {
+    font: 400 var(--fs-mono)/1 var(--font-mono);
+    color: var(--ink-faint);
+    text-align: right;
+  }
+
+  @media (max-width: 420px) {
+    /* The month column is fixed width and the location is right-aligned, so at the
+     * narrowest widths the name has nowhere to go. Drop the location under the name
+     * rather than let either truncate. */
+    .ev { grid-template-columns: 52px 1fr; gap: 10px; }
+    .ev__where { grid-column: 2; text-align: left; margin-top: 3px; }
+  }
+
+  /* ------------------------------------------------------- S02.T10 privacy ---- */
+
+  /* Export lines 217-231. Everything colour-related comes from .band--ink's token
+   * repointing, so this block only sets geometry and the two type sizes. */
+  .duo--privacy {
+    --duo-cols: 1fr 1.1fr;
+    --duo-gap: 52px;
+    --duo-align: center;
+  }
+
+  .privacy-h3 {
+    line-height: 1.04;
+    margin-bottom: 14px;
+  }
+
+  .prose--privacy {
+    line-height: 1.62;
+    margin-bottom: 0;
+  }
+
+  .nos { grid-template-columns: 1fr 1fr; }
+
+  .no { padding: 20px 18px; }
+
+  /* Accent on ink measures 3.27:1, which fails AA for normal text but passes the
+   * 3:1 large-text bar. This is 30px bold, so it qualifies. Do not use accent for
+   * anything smaller inside the band. */
+  .no__word {
+    display: block;
+    font-weight: 700;
+    font-size: var(--fs-no);
+    line-height: 1;
+    color: var(--accent);
+  }
+
+  .no__label {
+    display: block;
+    font: 400 var(--fs-mono)/1.4 var(--font-mono);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-top: 6px;
+  }
+
+  @media (max-width: 640px) {
+    /* Two columns of 30px "No" plus a label still read at 320px, so the grid keeps
+     * its 2x2 rather than becoming a 1-wide stack of four near-identical cells. */
+    .no { padding: 16px 14px; }
+  }
+
+  /* --------------------------------------------- S02.T11 about + blog teaser ---- */
+
+  /* Export lines 233-245. */
+  .duo--about { --duo-gap: 52px; }
+
+  .about__kicker {
+    --kicker-ls: .2em;
+    color: var(--ink-faint);
+    margin-bottom: 14px;
+  }
+
+  /* :last-of-type to match the specificity of .prose:last-of-type, which would
+   * otherwise win and give this paragraph the shared 20px instead of the design's
+   * 16px. Same weight, later in the file. */
+  .about__copy:last-of-type { margin-bottom: 16px; }
+
+  .teaser { padding: 26px 24px; }
+
+  .teaser__head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 12px;
+  }
+
+  .teaser__kicker { --kicker-ls: .2em; }
+
+  .teaser__title {
+    font-size: var(--fs-teaser-h);
+    line-height: 1.12;
+    margin-bottom: 10px;
+  }
+
+  .teaser__copy {
+    margin: 0;
+    font-size: var(--fs-teaser);
+    line-height: 1.58;
+    color: var(--ink-body);
+  }
+
+  /* ---------------------------------------------------------- S02.T12 footer ---- */
+
+  /* Export lines 247-251, plus one deliberate addition recorded in the story Notes:
+   * an Instagram link, since the domain exists because of @curatedflavorsofnyc. */
+  .site-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 22px;
+    padding-block: 26px;
+    border-top: var(--rule-double);
+    font: 400 10px/1.6 var(--font-mono);
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .site-foot__links {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .site-foot__links a { color: var(--ink); }
+
+  @media (hover: hover) {
+    .site-foot__links a:hover { color: var(--accent); }
+  }
+
+  @media (max-width: 640px) {
+    /* Three zones will not sit side by side. Stack them centred, and keep the link
+     * row as the middle band so it stays the most reachable thing. */
+    .site-foot {
+      flex-direction: column;
+      text-align: center;
+      gap: 14px;
+    }
+  }
+
+  /* ------------------------------------------------- S03.T04 reveal on scroll ---- */
+
+  /* Applied by JavaScript only. There is deliberately no `[data-reveal]` rule that
+   * hides anything: if this class is never added, every section stays visible, which
+   * is what keeps the page complete without JS. */
+  .is-hidden {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  [data-reveal] {
+    transition: opacity .5s ease, transform .5s ease;
+  }
+}

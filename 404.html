@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Not in this edition: NYC Eats</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="That page is not part of curatedflavors.nyc.">
+
+<link rel="icon" href="/assets/img/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="/assets/img/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<meta name="theme-color" content="#f2efe4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16150f" media="(prefers-color-scheme: dark)">
+
+<!-- Absolute paths, not relative: GitHub Pages serves this file for a miss at any
+     depth, so /a/b/c/nope must still find the stylesheets. -->
+<link rel="stylesheet" href="/assets/css/fonts.css">
+<link rel="stylesheet" href="/assets/css/site.css">
+<style>
+  .miss { min-height: 100svh; display: grid; place-items: center; text-align: center; }
+  .miss__inner { max-width: 30rem; }
+  .miss__mast {
+    font-size: clamp(2.5rem, 9vw, 4rem);
+    font-weight: 900; line-height: .9; letter-spacing: -.02em;
+    margin-bottom: 10px;
+  }
+  .miss__code { --kicker-ls: .3em; color: var(--accent); margin-bottom: 22px; }
+  .miss__line { font-size: var(--fs-body); color: var(--ink-body); margin-bottom: 28px; }
+</style>
+</head>
+<body>
+<main class="miss section">
+  <div class="miss__inner">
+    <p class="miss__code kicker">Error 404 &middot; Page not found</p>
+    <h1 class="miss__mast">NYC EATS</h1>
+    <div class="rule-double" style="height:0;margin-bottom:24px"></div>
+    <p class="miss__line">This page is not in this edition.</p>
+    <p><a class="btn" href="/">Back to the front page</a></p>
+  </div>
+</main>
+</body>
+</html>

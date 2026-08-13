@@ -1,0 +1,127 @@
+/* fonts.css - self-hosted webfaces for curatedflavors.nyc
+ *
+ * Every typeface the Broadsheet page uses, served from this origin. Nothing here
+ * touches fonts.googleapis.com or fonts.gstatic.com: a site whose loudest stat is
+ * "0 Trackers" must not phone Google for its type.
+ *
+ * Built by EP01.S01.T02. Do not hand-edit the font files: regenerate with
+ *   uv run tools/build_webfonts.py
+ * which pins the google/fonts commit and carries every axis and subset decision.
+ * Measurements and rationale:
+ *   plans/EP01-curated-flavors-website/S01T02-self-host-webfonts.md
+ *
+ * Sources (all SIL OFL 1.1, license text committed beside each file):
+ *   Bodoni Moda  github.com/google/fonts ofl/bodonimoda
+ *   Newsreader   github.com/google/fonts ofl/newsreader
+ *   Space Mono   github.com/google/fonts ofl/spacemono
+ *
+ * Roles on the page:
+ *   Bodoni Moda  display: masthead 900, headlines and figures 700, drop cap
+ *   Newsreader   body copy 400, <strong> 700, italic byline and <em>
+ *   Space Mono   kickers, chips, labels, buttons, meta lines
+ *
+ * Total 181.8 KB across five faces. Kerning and ligatures are present: fontTools'
+ * default feature set already includes kern, liga, calt and mark positioning, so
+ * the build does NOT pass --layout-features='*'. Doing so would add features the
+ * page never uses (small caps, oldstyle figures, stylistic sets) and, through
+ * layout closure, the glyphs they reach: that plus retained TrueType hinting cost
+ * 55.9 KB, a 23 percent overhead, for no visible difference on screen.
+ *
+ * GLYPH COVERAGE, and its one real gap
+ *
+ * Subset to latin + latin-ext + vietnamese, wider than "latin" on purpose: the
+ * ledger, events, and happy-hour rows hydrate from real venue names carrying
+ * accents, macrons, and Vietnamese diacritics, so the design's own copy is not the
+ * repertoire.
+ *
+ * Newsreader and Space Mono cover every Latin-script character in the bundled
+ * dataset. **Bodoni Moda does not**: upstream it has almost no precomposed
+ * Vietnamese glyphs (Google does not even publish a vietnamese subset for it).
+ * Subsetting cannot add what the source lacks. Since Bodoni is where hydrated
+ * names render, a Vietnamese name promoted into the ledger falls back per glyph in
+ * those cells. Canary from the real data: "Cơm Tấm Ninh Kiều" is missing U+01A1,
+ * U+1EA5 and U+1EC1 in Bodoni. It sits below the ledger's community-score bar
+ * today; it is on the S07.T04 ops watchlist.
+ *
+ * CJK and emoji names are left to the browser's per-glyph fallback by design (a
+ * CJK webfont would be megabytes).
+ *
+ * Two symbol facts worth knowing before debugging a stray character:
+ *   U+2192 (arrow) exists only in Space Mono, which is where the design uses it.
+ *   U+2605 (star) is in NONE of these faces. See EP01.S02.T03: the hero meta line
+ *   uses a drawn star, not the character, so it cannot be substituted by a
+ *   platform symbol or color-emoji face.
+ *
+ * No unicode-range is declared. With one file per family and style, a narrow range
+ * would stop the browser from using a font for characters the file actually
+ * contains, pushing Latin-Extended names to Georgia for no benefit. (Declared
+ * ranges and real coverage are independent: Google's own Bodoni Moda "symbols"
+ * subset declares U+2192 and the range containing U+2605, and its cmap has
+ * neither. The cmap is the only reliable instrument.)
+ *
+ * CONSTRAINT for anyone adding styles: there is no Bodoni Moda italic face, so
+ * `font-style: italic` on a Bodoni element makes the browser shear the roman.
+ * Synthetic oblique on a high-contrast Didone skews the vertical stress and
+ * thickens hairlines asymmetrically, wrecking exactly the stroke contrast the
+ * opsz axis was kept to protect. Do not create a display-italic token.
+ *
+ * Author: pgangan
+ */
+
+/* Display. Both axes kept: this is the one family whose sizes genuinely span the
+ * optical range (masthead 132px down to 18px ledger names), and the browser's
+ * default font-optical-sizing: auto is what gives the masthead its fine Didone
+ * hairlines. wght stays 400..900 rather than being clipped to the 700..900 the
+ * page uses, so a Bodoni 400 never silently clamps to bold. */
+@font-face {
+  font-family: 'Bodoni Moda';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('../fonts/bodoni-moda/BodoniModa-var.woff2') format('woff2');
+}
+
+/* Body. opsz pinned at 16 (body copy is only ever 14 to 16.5px, so a 6..72
+ * optical range cost 135 KB for sizes this page never renders); wght clipped to
+ * 400..700, which is exactly body weight through <strong>. */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../fonts/newsreader/Newsreader-var.woff2') format('woff2');
+}
+
+/* Body italic. A static 400 instance, not a variable face: italic is used at
+ * exactly one weight (the byline note plus two <em>s), where a static is cheaper.
+ *
+ * If markup ever asks for `italic 700` (an <em> nested inside a <strong>), CSS
+ * matches style before weight, so this true-italic face wins over the roman
+ * 400-700 face and the browser applies synthetic bolding to a real italic. That
+ * is the better of the two synthesis outcomes, so it is left as is rather than
+ * "fixed" by widening this face. */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/newsreader/Newsreader-Italic.woff2') format('woff2');
+}
+
+/* Labels. Space Mono has no variable version upstream, so 400 and 700 are two
+ * static files. */
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/space-mono/SpaceMono-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/space-mono/SpaceMono-Bold.woff2') format('woff2');
+}

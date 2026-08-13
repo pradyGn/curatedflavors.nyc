@@ -1,0 +1,5 @@
+# curatedflavors.nyc
+User-agent: *
+Allow: /
+
+Sitemap: https://curatedflavors.nyc/sitemap.xml
